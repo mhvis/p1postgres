@@ -9,6 +9,13 @@ from dsmr_parser.clients import SerialReader
 
 logger = logging.getLogger(__name__)
 
+
+def get_cosem_value(telegram: Dict, obis: str):
+    """Extract the value from a CosemObject if it exists."""
+    obj = telegram.get(obis)
+    return obj.value if obj else None
+
+
 SQL_INSERT_ELECTRICITY = """
 INSERT INTO electricity_data
     (time, meter_id, import_low, import_normal, export_low, export_normal,
@@ -23,24 +30,24 @@ VALUES (now(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
 def get_electricity_params(telegram: Dict, meter_id: int) -> Tuple:
     return (
         meter_id,
-        telegram.get(obis_references.ELECTRICITY_USED_TARIFF_1),
-        telegram.get(obis_references.ELECTRICITY_USED_TARIFF_2),
-        telegram.get(obis_references.ELECTRICITY_DELIVERED_TARIFF_1),
-        telegram.get(obis_references.ELECTRICITY_DELIVERED_TARIFF_2),
-        telegram.get(obis_references.CURRENT_ELECTRICITY_USAGE),
-        telegram.get(obis_references.CURRENT_ELECTRICITY_DELIVERY),
-        telegram.get(obis_references.INSTANTANEOUS_VOLTAGE_L1),
-        telegram.get(obis_references.INSTANTANEOUS_VOLTAGE_L2),
-        telegram.get(obis_references.INSTANTANEOUS_VOLTAGE_L3),
-        telegram.get(obis_references.INSTANTANEOUS_CURRENT_L1),
-        telegram.get(obis_references.INSTANTANEOUS_CURRENT_L2),
-        telegram.get(obis_references.INSTANTANEOUS_CURRENT_L3),
-        telegram.get(obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE),
-        telegram.get(obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE),
-        telegram.get(obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE),
-        telegram.get(obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE),
-        telegram.get(obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE),
-        telegram.get(obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE),
+        get_cosem_value(telegram, obis_references.ELECTRICITY_USED_TARIFF_1),
+        get_cosem_value(telegram, obis_references.ELECTRICITY_USED_TARIFF_2),
+        get_cosem_value(telegram, obis_references.ELECTRICITY_DELIVERED_TARIFF_1),
+        get_cosem_value(telegram, obis_references.ELECTRICITY_DELIVERED_TARIFF_2),
+        get_cosem_value(telegram, obis_references.CURRENT_ELECTRICITY_USAGE),
+        get_cosem_value(telegram, obis_references.CURRENT_ELECTRICITY_DELIVERY),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_VOLTAGE_L1),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_VOLTAGE_L2),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_VOLTAGE_L3),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_CURRENT_L1),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_CURRENT_L2),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_CURRENT_L3),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE),
+        get_cosem_value(telegram, obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE),
     )
 
 
@@ -81,15 +88,15 @@ def get_meter_params(telegram: Dict, meter_id: int) -> Tuple:
         power_event_failure_log = None
 
     return (
-        telegram.get(obis_references.SHORT_POWER_FAILURE_COUNT),
-        telegram.get(obis_references.LONG_POWER_FAILURE_COUNT),
+        get_cosem_value(telegram, obis_references.SHORT_POWER_FAILURE_COUNT),
+        get_cosem_value(telegram, obis_references.LONG_POWER_FAILURE_COUNT),
         power_event_failure_log,
-        telegram.get(obis_references.VOLTAGE_SAG_L1_COUNT),
-        telegram.get(obis_references.VOLTAGE_SAG_L2_COUNT),
-        telegram.get(obis_references.VOLTAGE_SAG_L3_COUNT),
-        telegram.get(obis_references.VOLTAGE_SWELL_L1_COUNT),
-        telegram.get(obis_references.VOLTAGE_SWELL_L2_COUNT),
-        telegram.get(obis_references.VOLTAGE_SWELL_L3_COUNT),
+        get_cosem_value(telegram, obis_references.VOLTAGE_SAG_L1_COUNT),
+        get_cosem_value(telegram, obis_references.VOLTAGE_SAG_L2_COUNT),
+        get_cosem_value(telegram, obis_references.VOLTAGE_SAG_L3_COUNT),
+        get_cosem_value(telegram, obis_references.VOLTAGE_SWELL_L1_COUNT),
+        get_cosem_value(telegram, obis_references.VOLTAGE_SWELL_L2_COUNT),
+        get_cosem_value(telegram, obis_references.VOLTAGE_SWELL_L3_COUNT),
         meter_id,
     )
 
@@ -123,17 +130,20 @@ def main():
         # https://www.psycopg.org/docs/usage.html#transactions-control
         with conn:
             with conn.cursor() as curs:
-                curs.execute(SQL_INSERT_ELECTRICITY, get_electricity_params(telegram, meter_id))
+                # Electricity
+                electricity = get_electricity_params(telegram, meter_id)
+                logger.debug('Inserting electricity reading: %s', electricity)
+                curs.execute(SQL_INSERT_ELECTRICITY, electricity)
                 # Gas
                 gas = get_gas_params(telegram, meter_id)
-                if gas != cached_gas:
-                    logger.debug('Gas reading inserted: %s', gas)
+                if gas and gas != cached_gas:
+                    logger.debug('Inserting gas reading: %s', gas)
                     curs.execute(SQL_INSERT_GAS, gas)
                     cached_gas = gas
                 # Meter statistics
                 meter = get_meter_params(telegram, meter_id)
                 if meter != cached_meter:
-                    logger.debug('Meter statistics updated: %s', meter)
+                    logger.debug('Updating meter statistics: %s', meter)
                     curs.execute(SQL_UPDATE_METER, meter)
                     cached_meter = meter
 
