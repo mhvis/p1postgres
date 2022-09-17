@@ -6,6 +6,7 @@ import dsmr_parser.clients
 import psycopg2
 from dsmr_parser import telegram_specifications, obis_references
 from dsmr_parser.clients import SerialReader
+from psycopg2._json import Json
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,10 @@ WHERE id = %s;
 def get_meter_params(telegram: Dict, meter_id: int) -> Tuple:
     power_failure_object = telegram.get(obis_references.POWER_EVENT_FAILURE_LOG)
     if power_failure_object:
-        power_event_failure_log = [{'event_time': e.datetime, 'duration': e.value} for e in power_failure_object.buffer]
+        # Construct JSON array with power failures
+        power_event_failure_log = Json([
+            {'time': e.datetime, 'duration': e.value} for e in power_failure_object.buffer
+        ])
     else:
         power_event_failure_log = None
 
