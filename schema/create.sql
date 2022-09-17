@@ -53,8 +53,8 @@ SELECT create_hypertable('gas_data', 'time');
 
 
 CREATE TABLE energy_contracts (
-    start timestamptz NOT NULL,
-    stop timestamptz NOT NULL,
+    id SERIAL PRIMARY KEY,
+    period tstzrange NOT NULL,  -- I could create an index for this.
     name varchar(50),
     meter_id integer REFERENCES meters NOT NULL,
     -- Electricity price low and normal tariff, in euros per kWh.
@@ -68,11 +68,18 @@ CREATE TABLE energy_contracts (
 );
 
 
--- Useful views
--- CREATE MATERIALIZED VIEW electricity_view
+-- Create a materialized view for downsampled electricity data.
+--
+-- The sample rate of electricity data can be quite high, up to one sample each
+-- second. This view downsamples to a data point once very 5 minutes. This
+-- enables quick queries over longer time periods. Monthly and yearly
+-- aggregations can be quickly computed from this table.
+
+
+-- CREATE MATERIALIZED VIEW electricity_downsampled
 -- WITH (timescaledb.continuous) AS
 -- SELECT
--- 	time_bucket('1 minute', time) AS minute,
+-- 	time_bucket('5 minutes', time) AS minute,
 -- 	meter_id,
 -- 	last(electricity_used_tariff_1, time) AS used_t1,
 -- 	last(electricity_used_tariff_2, time) AS used_t2,

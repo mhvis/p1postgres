@@ -27,3 +27,9 @@ services:
       - /dev/ttyUSB0:/dev/ttyUSB0
     restart: unless-stopped
 ```
+
+
+## Schema
+
+The required schema can be found in `schema/create.sql`.
+You have to create it manually.

@@ -136,3 +136,7 @@ def main():
                     logger.debug('Meter statistics updated: %s', meter)
                     curs.execute(SQL_UPDATE_METER, meter)
                     cached_meter = meter
+
+
+if __name__ == '__main__':
+    main()
