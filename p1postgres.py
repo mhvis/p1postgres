@@ -6,7 +6,6 @@ import dsmr_parser.clients
 import psycopg2
 from dsmr_parser import telegram_specifications, obis_references
 from dsmr_parser.clients import SerialReader
-from psycopg2._json import Json
 
 logger = logging.getLogger(__name__)
 
