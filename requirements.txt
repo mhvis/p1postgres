@@ -1,4 +1,4 @@
 psycopg2==2.9.3
 dsmr-parser==0.33
-influxdb-client==1.31.0  # Only used for importing from InfluxDBv2
 pyserial==3.5
+influxdb-client==1.31.0  # Only used for importing from InfluxDBv2

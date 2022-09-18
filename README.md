@@ -21,8 +21,10 @@ services:
       # Usually the same as serial settings.
       P1_TELEGRAM_SPECIFICATION: V5
       P1_DEVICE: /dev/ttyUSB0
-      # The meter ID in the database. Should have been inserted beforehand.
+      # The meter ID in the database. The meter row should exist.
       P1_METER_ID: 1
+      # Uncomment to see what's happening
+      #P1_DEBUG: 1
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
     restart: unless-stopped
@@ -32,4 +34,7 @@ services:
 ## Schema
 
 The required schema can be found in `schema/create.sql`.
-You have to create it manually.
+Use these SQL scripts to create the tables and insert rows for your meters and
+energy contracts (to calculate cost information).
+
+TODO: add interesting queries or views.

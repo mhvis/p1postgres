@@ -1,5 +1,0 @@
-from(bucket: "YOUR_BUCKET_HERE")
-    |> range(start: 1970-01-01, stop: now())
-    |> filter(fn: (r) => r._measurement == "gas_meter")
-    |> filter(fn: (r) => r._field == "reading")
-    |> drop(columns: ["_measurement", "_start", "_stop"])
