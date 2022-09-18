@@ -85,8 +85,10 @@ def get_meter_params(telegram: Dict, meter_id: int) -> Tuple:
     power_failure_object = telegram.get(obis_references.POWER_EVENT_FAILURE_LOG)
     if power_failure_object:
         # Construct JSON array with power failures
+        #
+        # TODO: store time as PostgreSQL datetime type.
         power_event_failure_log = Json([
-            {'time': e.datetime, 'duration': e.value} for e in power_failure_object.buffer
+            {'time': e.datetime.isoformat(), 'duration': e.value} for e in power_failure_object.buffer
         ])
     else:
         power_event_failure_log = None
