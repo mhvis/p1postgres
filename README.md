@@ -6,6 +6,8 @@ Insert DSMR P1 readings in a PostgreSQL database with TimescaleDB.
 ## Docker configuration
 
 See the Docker Compose example for possible environment variables.
+NOTE: the image is only for amd64, not for Raspberry Pi (arm).
+Build the image yourself for these platforms.
 
 ```yaml
 name: p1postgres
