@@ -70,7 +70,7 @@ SQL_UPDATE_METER = """
 UPDATE meters SET
     short_power_failure_count = %s,
     long_power_failure_count = %s,
-    power_failure_log = %s,
+    power_failure_log = %s::power_failure_event[],
     voltage_sag_l1_count = %s,
     voltage_sag_l2_count = %s,
     voltage_sag_l3_count = %s,
