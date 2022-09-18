@@ -70,7 +70,7 @@ SQL_UPDATE_METER = """
 UPDATE meters SET
     short_power_failure_count = %s,
     long_power_failure_count = %s,
-    power_event_failure_log = %s,
+    power_failure_log = %s,
     voltage_sag_l1_count = %s,
     voltage_sag_l2_count = %s,
     voltage_sag_l3_count = %s,
@@ -84,19 +84,15 @@ WHERE id = %s;
 def get_meter_params(telegram: Dict, meter_id: int) -> Tuple:
     power_failure_object = telegram.get(obis_references.POWER_EVENT_FAILURE_LOG)
     if power_failure_object:
-        # Construct JSON array with power failures
-        #
-        # TODO: store time as PostgreSQL datetime type.
-        power_event_failure_log = Json([
-            {'time': e.datetime.isoformat(), 'duration': e.value} for e in power_failure_object.buffer
-        ])
+        # Construct array with power failures
+        power_failure_log = [(e.datetime, e.value) for e in power_failure_object.buffer]
     else:
-        power_event_failure_log = None
+        power_failure_log = None
 
     return (
         get_cosem_value(telegram, obis_references.SHORT_POWER_FAILURE_COUNT),
         get_cosem_value(telegram, obis_references.LONG_POWER_FAILURE_COUNT),
-        power_event_failure_log,
+        power_failure_log,
         get_cosem_value(telegram, obis_references.VOLTAGE_SAG_L1_COUNT),
         get_cosem_value(telegram, obis_references.VOLTAGE_SAG_L2_COUNT),
         get_cosem_value(telegram, obis_references.VOLTAGE_SAG_L3_COUNT),

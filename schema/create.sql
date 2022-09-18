@@ -1,9 +1,16 @@
+CREATE TYPE power_failure_event AS (
+    -- End of failure.
+    time timestamptz,
+    -- Duration in seconds.
+    duration integer
+);
+
 CREATE TABLE meters (
     id SERIAL PRIMARY KEY,
     location varchar(50),
     short_power_failure_count integer,
     long_power_failure_count integer,
-    power_event_failure_log jsonb,
+    power_failure_log power_failure_event[],
     voltage_sag_l1_count integer,
     voltage_sag_l2_count integer,
     voltage_sag_l3_count integer,
